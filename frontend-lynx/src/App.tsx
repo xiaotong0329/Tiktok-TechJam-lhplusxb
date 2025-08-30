@@ -44,7 +44,6 @@ interface CommunityPost {
   note: string
   likes: number
   stars: number
-  comments_count: number
   created_at: string
   isLiked?: boolean
   isStarred?: boolean
@@ -1144,7 +1143,7 @@ export function App() {
                 <text className="post-stat-text">⭐ {post.stars}</text>
               </view>
               <view className="post-stat">
-                <text className="post-stat-text">💬 {post.comments_count}</text>
+
               </view>
             </view>
           </view>

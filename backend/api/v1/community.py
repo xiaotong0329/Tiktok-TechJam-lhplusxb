@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify, g
 from datetime import datetime
 from auth.models import User
-from models.community_posts import CommunityPost, PostComment
+from models.community_posts import CommunityPost
 import logging
 
 community_bp = Blueprint('community', __name__)
@@ -283,70 +283,7 @@ def get_post_status(post_id):
         logging.error(f"Error getting post status: {str(e)}")
         return jsonify({"error": "Internal server error"}), 500
 
-@community_bp.route('/posts/<post_id>/comments', methods=['POST'])
-def add_comment(post_id):
-    """Add a comment to a post"""
-    try:
-        data = request.get_json()
-        if not data:
-            return jsonify({"error": "No JSON data provided"}), 400
-        
-        # Get user from JWT token
-        auth_header = request.headers.get('Authorization')
-        if not auth_header or not auth_header.startswith('Bearer '):
-            return jsonify({"error": "Authorization header required"}), 401
-        
-        token = auth_header.split(' ')[1]
-        user_id = User.verify_jwt_token(token)
-        if not user_id:
-            return jsonify({"error": "Invalid or expired token"}), 401
-        
-        # Validate comment
-        comment = data.get('comment', '').strip()
-        if not comment:
-            return jsonify({"error": "comment is required"}), 400
-        
-        # Check if post exists
-        post = CommunityPost.get_post_by_id(post_id)
-        if not post:
-            return jsonify({"error": "Post not found"}), 404
-        
-        # Add comment
-        comment_id = PostComment.create(post_id, user_id, comment)
-        
-        return jsonify({
-            "message": "Comment added successfully",
-            "comment_id": comment_id
-        }), 201
-        
-    except Exception as e:
-        logging.error(f"Error adding comment: {str(e)}")
-        return jsonify({"error": "Internal server error"}), 500
 
-@community_bp.route('/posts/<post_id>/comments', methods=['GET'])
-def get_comments(post_id):
-    """Get comments for a post"""
-    try:
-        post = CommunityPost.get_post_by_id(post_id)
-        if not post:
-            return jsonify({"error": "Post not found"}), 404
-        
-        comments = PostComment.get_post_comments(post_id)
-        
-        for comment in comments:
-            comment['_id'] = str(comment['_id'])
-            comment['post_id'] = str(comment['post_id'])
-            comment['user_id'] = str(comment['user_id'])
-            comment['created_at'] = comment['created_at'].isoformat()
-        
-        return jsonify({
-            "comments": comments,
-            "count": len(comments)
-        }), 200
-        
-    except Exception as e:
-        logging.error(f"Error getting comments: {str(e)}")
-        return jsonify({"error": "Internal server error"}), 500
 
 @community_bp.route('/my-posts', methods=['GET'])
 def get_my_posts():

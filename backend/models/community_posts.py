@@ -20,7 +20,6 @@ class CommunityPost:
             'created_at': datetime.utcnow(),
             'likes': 0,
             'stars': 0,
-            'comments_count': 0,
             'user_username': None  
         }
         
@@ -192,37 +191,4 @@ class CommunityPost:
         })
         return star is not None
 
-class PostComment:
-    @staticmethod
-    def create(post_id: str, user_id: str, comment: str):
-        """Create a comment on a post"""
-        comment_data = {
-            'post_id': ObjectId(post_id),
-            'user_id': ObjectId(user_id),
-            'comment': comment,
-            'created_at': datetime.utcnow(),
-            'user_username': None
-        }
-        
-        
-        user = g.db.users.find_one({'_id': ObjectId(user_id)})
-        if user:
-            comment_data['user_username'] = user.get('username', 'Anonymous')
-        
-        result = g.db.post_comments.insert_one(comment_data)
-        
-        g.db.community_posts.update_one(
-            {'_id': ObjectId(post_id)},
-            {'$inc': {'comments_count': 1}}
-        )
-        
-        return str(result.inserted_id)
-
-    @staticmethod
-    def get_post_comments(post_id: str, limit: int = 50):
-        """Get comments for a specific post"""
-        cursor = g.db.post_comments.find({
-            'post_id': ObjectId(post_id)
-        }).sort('created_at', -1).limit(limit)
-        
-        return list(cursor) 
+ 
